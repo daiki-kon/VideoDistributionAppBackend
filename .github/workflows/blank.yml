@@ -32,6 +32,6 @@ jobs:
           # The version of Terraform CLI to install. Instead of full version string you can also specify constraint string starting with "<" (for example `<1.13.0`) to install the latest version satisfying the constraint. A value of `latest` will install the latest version of Terraform CLI. Defaults to `latest`.
           terraform_version: 0.13.3
       - id: init
-        run: terraform init
+        run: terraform init terraform/
       - id: apply
-        run: terraform apply -auto-approve -no-color
+        run: terraform apply -auto-approve -no-color terraform/
