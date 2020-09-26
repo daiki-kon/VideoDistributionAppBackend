@@ -33,9 +33,5 @@ jobs:
           terraform_version: 0.13.3
       - id: init
         run: terraform init terraform/
-      - id: debug
-        run: pwd
-      - id: debug2
-        run: ls
       - id: apply
         run: terraform apply -auto-approve -no-color terraform/

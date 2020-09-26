@@ -50,8 +50,8 @@ resource "aws_lambda_event_source_mapping" "invert_index" {
 # Lambda
 data "archive_file" "invert_index_ddb_stream" {
   type        = "zip"
-  source_dir  = "scripts/invertIndex/"
-  output_path = "scripts/invertIndex.zip"
+  source_dir  = "terraform/scripts/invertIndex/"
+  output_path = "terraform/scripts/invertIndex.zip"
 }
 
 resource "aws_lambda_function" "invert_index_ddb_stream" {
