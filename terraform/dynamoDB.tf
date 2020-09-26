@@ -60,7 +60,7 @@ data "archive_file" "janome_lambda_layer" {
     output_path = "modules/janome.zip"
 }
 
-resource "aws_lambda_layer_version" "lambda_layer" {
+resource "aws_lambda_layer_version" "janome" {
     filename = data.archive_file.janome_lambda_layer.output_path
     layer_name = "janome"
     compatible_runtimes = ["python3.8"]
@@ -74,6 +74,8 @@ resource "aws_lambda_function" "invert_index_ddb_stream" {
 
   filename         = data.archive_file.invert_index_ddb_stream.output_path
   source_code_hash = data.archive_file.invert_index_ddb_stream.output_base64sha256
+
+  layers = [aws_lambda_layer_version.janome.arn]
 }
 
 resource "aws_cloudwatch_log_group" "lambda_log_group" {
