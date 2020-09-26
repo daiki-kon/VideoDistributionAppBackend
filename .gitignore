@@ -1,3 +1,4 @@
 backend.tf
 .terraform/
 *.zip
+/modules/janome/*
