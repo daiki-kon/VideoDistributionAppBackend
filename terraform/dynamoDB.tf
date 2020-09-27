@@ -11,10 +11,10 @@ resource "aws_dynamodb_table" "video_info" {
   }
 
   stream_enabled   = true
-  stream_view_type = "NEW_IMAGE"
+  stream_view_type = "NEW_AND_OLD_IMAGES"
 
   tags = {
-    App = "VideoDistribution"
+    AppName = "VideoDistribution"
   }
 }
 
@@ -24,20 +24,14 @@ resource "aws_dynamodb_table" "inverted_index" {
   read_capacity  = 5
   write_capacity = 5
   hash_key       = "Key"
-  range_key      = "VideoId"
 
   attribute {
     name = "Key"
     type = "S"
   }
 
-  attribute {
-    name = "VideoId"
-    type = "S"
-  }
-
   tags = {
-    App = "VideoDistribution"
+    AppName = "VideoDistribution"
   }
 }
 
@@ -45,6 +39,7 @@ resource "aws_lambda_event_source_mapping" "invert_index" {
   event_source_arn  = aws_dynamodb_table.video_info.stream_arn
   function_name     = aws_lambda_function.invert_index_ddb_stream.arn
   starting_position = "LATEST"
+  batch_size = 1
 }
 
 # Lambda
@@ -55,15 +50,17 @@ data "archive_file" "invert_index_ddb_stream" {
 }
 
 data "archive_file" "janome_lambda_layer" {
-    type        = "zip"
-    source_dir = "modules/janome/"
-    output_path = "modules/janome.zip"
+  type        = "zip"
+  source_dir  = "terraform/modules/janome"
+  output_path = "terraform/janome_lib.zip"
 }
 
 resource "aws_lambda_layer_version" "janome" {
-    filename = data.archive_file.janome_lambda_layer.output_path
-    layer_name = "janome"
-    compatible_runtimes = ["python3.8"]
+  filename            = data.archive_file.janome_lambda_layer.output_path
+  layer_name          = "janome"
+  compatible_runtimes = ["python3.8"]
+  source_code_hash    = data.archive_file.janome_lambda_layer.output_base64sha256
+  depends_on          = [data.archive_file.janome_lambda_layer]
 }
 
 resource "aws_lambda_function" "invert_index_ddb_stream" {
@@ -75,16 +72,36 @@ resource "aws_lambda_function" "invert_index_ddb_stream" {
   filename         = data.archive_file.invert_index_ddb_stream.output_path
   source_code_hash = data.archive_file.invert_index_ddb_stream.output_base64sha256
 
+  timeout     = 10
+  memory_size = 1256
+
   layers = [aws_lambda_layer_version.janome.arn]
+
+  environment {
+    variables = {
+      VIDEO_TITLE_TABLE_NAME = "${aws_dynamodb_table.inverted_index.name}"
+    }
+  }
+
+  tags = {
+    AppName = "VideoDistribution"
+  }
 }
 
 resource "aws_cloudwatch_log_group" "lambda_log_group" {
   name              = "/aws/lambda/${aws_lambda_function.invert_index_ddb_stream.function_name}"
   retention_in_days = 3
+  tags = {
+    AppName = "VideoDistribution"
+  }
 }
 
 resource "aws_iam_role" "invert_index_ddb_stream" {
   name = "invert_index_ddb_stream_lambda"
+
+  tags = {
+    AppName = "VideoDistribution"
+  }
 
   assume_role_policy = <<EOF
 {
@@ -110,8 +127,9 @@ resource "aws_iam_role_policy_attachment" "invert_index_ddb_stream_attatch_Lambd
 
 // DynamoDB Stream の読み込み権限
 resource "aws_iam_role_policy" "invert_index_ddb_stream_allow_stream" {
-  role   = aws_iam_role.invert_index_ddb_stream.id
-  name   = "invert_index_ddb_stream_"
+  role = aws_iam_role.invert_index_ddb_stream.id
+  name = "invert_index_ddb_stream_lambda"
+
   policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -124,6 +142,30 @@ resource "aws_iam_role_policy" "invert_index_ddb_stream_allow_stream" {
                 "dynamodb:ListStreams"
             ],
             "Resource": "${aws_dynamodb_table.video_info.stream_arn}",
+            "Effect": "Allow"
+        }
+    ]
+}
+EOF
+}
+
+// DynamoDB へのアクセス権限
+resource "aws_iam_role_policy" "invert_index_ddb_stream_allow_access" {
+  role = aws_iam_role.invert_index_ddb_stream.id
+  name = "invert_index_table_lamdba"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "dynamodb:DeleteItem",
+                "dynamodb:GetItem",
+                "dynamodb:Query",
+                "dynamodb:PutItem"
+            ],
+            "Resource": "${aws_dynamodb_table.inverted_index.arn}",
             "Effect": "Allow"
         }
     ]
