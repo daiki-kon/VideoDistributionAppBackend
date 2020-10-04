@@ -19,12 +19,12 @@ def lambda_handler(event: dict, context):
 
         if None != posted_record:
             converted_dict     = conv_ddb_to_dict(posted_record)
-            video_id           = converted_dict['VideoId']
-            video_title        = converted_dict['VideoTitle']
+            video_id           = converted_dict['videoId']
+            video_title        = converted_dict['videoTitle']
         if None != old_posted_record:
             old_converted_dict = conv_ddb_to_dict(old_posted_record)
-            old_video_id       = old_converted_dict['VideoId']
-            old_video_title    = old_converted_dict['VideoTitle']
+            old_video_id       = old_converted_dict['videoId']
+            old_video_title    = old_converted_dict['videoTitle']
 
         if event_name == 'INSERT':
             register_title_to_inverted_index(video_id, video_title)
@@ -34,7 +34,7 @@ def lambda_handler(event: dict, context):
 
         elif event_name == 'MODIFY':
 
-            old_video_title    = old_converted_dict['VideoTitle'] 
+            old_video_title    = old_converted_dict['videoTitle'] 
 
             delete_title_from_inverted_index(old_video_id, old_video_title)
             register_title_to_inverted_index(video_id, video_title)
