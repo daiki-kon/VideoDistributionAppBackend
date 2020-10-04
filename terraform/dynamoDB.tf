@@ -49,20 +49,6 @@ data "archive_file" "invert_index_ddb_stream" {
   output_path = "terraform/scripts/invertIndex.zip"
 }
 
-data "archive_file" "janome_lambda_layer" {
-  type        = "zip"
-  source_dir  = "terraform/modules/janome"
-  output_path = "terraform/janome_lib.zip"
-}
-
-resource "aws_lambda_layer_version" "janome" {
-  filename            = data.archive_file.janome_lambda_layer.output_path
-  layer_name          = "janome"
-  compatible_runtimes = ["python3.8"]
-  source_code_hash    = data.archive_file.janome_lambda_layer.output_base64sha256
-  depends_on          = [data.archive_file.janome_lambda_layer]
-}
-
 resource "aws_lambda_function" "invert_index_ddb_stream" {
   function_name = "invert_index_ddb_stream"
   handler       = "invertIndex.lambda_handler"
