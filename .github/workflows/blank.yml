@@ -30,6 +30,8 @@ jobs:
         uses: actions/setup-python@v2
       - id: install_janome
         run: pip3 install janome -t terraform/modules/janome/python/
+      - id: install_pytz
+        run: pip3 install pytz -t terraform/modules/janome/pytz/
       - name: HashiCorp - Setup Terraform
         uses: hashicorp/setup-terraform@v1.2.0
         with:
