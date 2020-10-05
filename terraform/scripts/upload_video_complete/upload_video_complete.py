@@ -5,6 +5,7 @@ import datetime
 import pytz
 import re
 import unicodedata
+import uuid
 
 VIDEO_INFO_TABLE_NAME = os.environ['VIDEO_INFO_TABLE_NAME']
 
@@ -22,8 +23,8 @@ def lambda_handler(event: dict, context):
 
     print(uploaded_time)
 
-    to_upload_complete(video_path, video_id, uploaded_time)
-    # forDev(video_id, video_path, uploaded_time)
+    # to_upload_complete(video_path, video_id, uploaded_time)
+    forDev(video_id, video_path, uploaded_time)
 
 def to_upload_complete(video_path: str, video_id: str, uploaded_time: str):
 
@@ -45,16 +46,18 @@ def to_upload_complete(video_path: str, video_id: str, uploaded_time: str):
 
     return
 
-def forDev(video_id: str, video_path: str, uploaded_time: str):
+def forDev(video_name: str, video_path: str, uploaded_time: str):
 
     dynamodb = boto3.resource('dynamodb')
 
     table = dynamodb.Table(VIDEO_INFO_TABLE_NAME)
 
+    video_id = str(uuid.uuid4()).replace('-', '')
+
     response = table.put_item(
         Item={
             'videoId': video_id,
-            'videoTitle': join_diacritic(video_id),
+            'videoTitle': join_diacritic(video_name),
             'videoPath': video_path,
             'uploadedTIme': uploaded_time,
             'userName': 'kenta',

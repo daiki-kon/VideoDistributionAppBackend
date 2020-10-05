@@ -102,6 +102,16 @@ resource "aws_iam_role_policy" "upload_video_complete" {
             ],
             "Resource": "${aws_dynamodb_table.video_info.arn}",
             "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "s3:*"
+            ],
+            "Resource": [
+              "${aws_s3_bucket.video_repo.arn}",
+              "${aws_s3_bucket.video_repo.arn}/*"
+            ],
+            "Effect": "Allow"
         }
     ]
 }
