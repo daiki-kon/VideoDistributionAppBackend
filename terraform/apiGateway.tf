@@ -25,7 +25,7 @@ resource "aws_api_gateway_rest_api" "VideoDistribution" {
 resource "aws_api_gateway_resource" "search_video" {
   rest_api_id = aws_api_gateway_rest_api.VideoDistribution.id
   parent_id   = aws_api_gateway_rest_api.VideoDistribution.root_resource_id
-  path_part   = "search_video"
+  path_part   = "searchVideo"
 }
 
 resource "aws_api_gateway_method" "search_video" {
@@ -34,13 +34,6 @@ resource "aws_api_gateway_method" "search_video" {
   http_method   = "GET"
   authorization = "NONE"
 }
-
-# resource "aws_api_gateway_method" "post_video_titile" {
-#   rest_api_id   = aws_api_gateway_rest_api.VideoDistribution.id
-#   resource_id   = aws_api_gateway_resource.video_titile.id
-#   http_method   = "POST"
-#   authorization = "NONE"
-# }
 
 resource "aws_api_gateway_integration" "search_video" {
   rest_api_id             = aws_api_gateway_rest_api.VideoDistribution.id

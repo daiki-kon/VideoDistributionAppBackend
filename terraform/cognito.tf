@@ -11,18 +11,31 @@ resource "aws_cognito_user_pool" "user_manage" {
   }
 }
 
+resource "aws_cognito_user_pool_client" "user_manage_secret" {
+  name = "VideoDistributionAppClientSecret"
+
+  generate_secret     = true
+  user_pool_id = aws_cognito_user_pool.user_manage.id
+}
+
 resource "aws_cognito_user_pool_client" "user_manage" {
   name = "VideoDistributionAppClient"
-
+  
+  generate_secret     = false
   user_pool_id = aws_cognito_user_pool.user_manage.id
 }
 
 resource "aws_cognito_identity_pool" "user_manage" {
   identity_pool_name               = "VideoDistributionApp"
-  allow_unauthenticated_identities = false
+  allow_unauthenticated_identities = true
 
   cognito_identity_providers {
     client_id     = aws_cognito_user_pool_client.user_manage.id
+    provider_name = aws_cognito_user_pool.user_manage.endpoint
+  }
+
+  cognito_identity_providers {
+    client_id     = aws_cognito_user_pool_client.user_manage_secret.id
     provider_name = aws_cognito_user_pool.user_manage.endpoint
   }
 
